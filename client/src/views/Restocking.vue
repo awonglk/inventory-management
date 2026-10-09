@@ -23,14 +23,14 @@
               v-model.number="budget"
               type="range"
               min="10000"
-              max="500000"
+              max="700000"
               step="10000"
               class="budget-slider"
               @input="calculateRecommendations"
             />
             <div class="budget-markers">
               <span>$10K</span>
-              <span>$500K</span>
+              <span>$700K</span>
             </div>
           </div>
           <div class="budget-display">
