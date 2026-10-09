@@ -55,6 +55,11 @@ npm install && npm run dev
 - `GET /api/demand`, `/api/backlog` - No filters
 - `GET /api/spending/*` - Summary, monthly, categories, transactions
 
+## Code Standards
+- Always document non-obvious logic changes with comments explaining the WHY
+- Comment on: hidden constraints, subtle invariants, workarounds for specific bugs, behavior that would surprise a reader
+- Avoid comments that explain WHAT the code does (well-named identifiers should do that)
+
 ## Common Issues
 1. Use unique keys in v-for (not `index`) - use `sku`, `month`, etc.
 2. Validate dates before `.getMonth()` calls
