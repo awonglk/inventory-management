@@ -8,6 +8,59 @@
     <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else>
+      <!-- Pending Delivery Section -->
+      <div v-if="pendingOrders.length > 0" class="card pending-delivery-card">
+        <div class="card-header">
+          <h3 class="card-title">Pending Delivery ({{ pendingOrders.length }} {{ pendingOrders.length === 1 ? 'order' : 'orders' }})</h3>
+        </div>
+        <div class="table-container">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th class="col-order-number">{{ t('orders.table.orderNumber') }}</th>
+                <th class="col-customer">Customer</th>
+                <th class="col-items">{{ t('orders.table.items') }}</th>
+                <th class="col-status">{{ t('orders.table.status') }}</th>
+                <th class="col-date">{{ t('orders.table.orderDate') }}</th>
+                <th class="col-date">{{ t('orders.table.expectedDelivery') }}</th>
+                <th class="col-countdown">Countdown</th>
+                <th class="col-value">{{ t('orders.table.totalValue') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in pendingOrders" :key="order.id">
+                <td class="col-order-number"><strong>{{ order.order_number }}</strong></td>
+                <td class="col-customer">{{ order.customer }}</td>
+                <td class="col-items">
+                  <details class="items-details">
+                    <summary class="items-summary">
+                      {{ t('orders.itemsCount', { count: order.items.length }) }}
+                    </summary>
+                    <div class="items-dropdown">
+                      <div v-for="(item, idx) in order.items" :key="idx" class="item-entry">
+                        <span class="item-name">{{ item.name }}</span>
+                        <span class="item-meta">{{ t('orders.quantity') }}: {{ item.quantity }} @ {{ currencySymbol }}{{ item.unit_price }}</span>
+                      </div>
+                    </div>
+                  </details>
+                </td>
+                <td class="col-status">
+                  <span class="badge info">{{ order.status }}</span>
+                </td>
+                <td class="col-date">{{ formatDate(order.order_date) }}</td>
+                <td class="col-date">{{ formatDate(order.expected_delivery) }}</td>
+                <td class="col-countdown">
+                  <span class="countdown-badge">
+                    Arriving in {{ getDaysUntilDelivery(order.expected_delivery) }} days
+                  </span>
+                </td>
+                <td class="col-value"><strong>{{ currencySymbol }}{{ order.total_value.toLocaleString() }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card success">
           <div class="stat-label">{{ t('status.delivered') }}</div>
@@ -95,6 +148,7 @@ export default {
     const loading = ref(true)
     const error = ref(null)
     const orders = ref([])
+    const pendingOrders = ref([])
 
     // Use shared filters
     const {
@@ -117,6 +171,10 @@ export default {
           const dateB = new Date(b.order_date)
           return dateA - dateB
         })
+
+        // Load pending orders from localStorage
+        const storedOrders = localStorage.getItem('submitted_orders')
+        pendingOrders.value = storedOrders ? JSON.parse(storedOrders) : []
       } catch (err) {
         error.value = 'Failed to load orders: ' + err.message
       } finally {
@@ -153,6 +211,16 @@ export default {
       })
     }
 
+    const getDaysUntilDelivery = (deliveryDateString) => {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const deliveryDate = new Date(deliveryDateString)
+      deliveryDate.setHours(0, 0, 0, 0)
+      const diffTime = deliveryDate - today
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays
+    }
+
     onMounted(loadOrders)
 
     return {
@@ -160,9 +228,11 @@ export default {
       loading,
       error,
       orders,
+      pendingOrders,
       getOrdersByStatus,
       getOrderStatusClass,
       formatDate,
+      getDaysUntilDelivery,
       currencySymbol,
       translateProductName,
       translateCustomerName
@@ -201,6 +271,25 @@ export default {
 
 .col-value {
   width: 120px;
+}
+
+.col-countdown {
+  width: 140px;
+}
+
+.pending-delivery-card {
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #3b82f6;
+}
+
+.countdown-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 6px;
+  font-size: 0.813rem;
+  font-weight: 600;
 }
 
 /* Items details styling */
